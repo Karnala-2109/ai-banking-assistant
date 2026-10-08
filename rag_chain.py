@@ -1,3 +1,4 @@
+
 import os
 import time
 
@@ -7,17 +8,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.documents import Document
 
-
-# ============================================================
-# LOAD ENVIRONMENT VARIABLES
-# ============================================================
-
 load_dotenv()
-
-
-# ============================================================
-# CONFIGURATION
-# ============================================================
 
 VECTORSTORE_FOLDER = "vectorstore"
 DATA_FOLDER = "data"
@@ -35,7 +26,7 @@ embeddings = HuggingFaceEmbeddings(
 
 
 # ============================================================
-# LOAD OR CREATE FAISS VECTOR STORE
+# LOAD / CREATE FAISS VECTOR STORE
 # ============================================================
 
 print("Loading FAISS vector store...")
@@ -105,7 +96,7 @@ else:
 
 
 # ============================================================
-# CONNECT TO GOOGLE GEMINI
+# CONNECT TO GEMINI
 # ============================================================
 
 print("Connecting to Gemini...")
@@ -134,6 +125,146 @@ print(
 
 
 # ============================================================
+# FALLBACK ANSWER
+# ============================================================
+
+def create_fallback_answer(
+    question,
+    document
+):
+
+    text = document.page_content
+
+    question_lower = question.lower()
+
+    # --------------------------------------------------------
+    # Personal Loan
+    # --------------------------------------------------------
+
+    if (
+        "personal loan" in question_lower
+        and (
+            "what is" in question_lower
+            or "overview" in question_lower
+        )
+    ):
+
+        return (
+            "A personal loan is an unsecured loan that can be "
+            "used for personal financial needs such as education, "
+            "medical expenses, travel, home renovation, or other "
+            "eligible purposes."
+        )
+
+
+    # --------------------------------------------------------
+    # Home Loan
+    # --------------------------------------------------------
+
+    if (
+        "home loan" in question_lower
+        and (
+            "what is" in question_lower
+            or "overview" in question_lower
+        )
+    ):
+
+        return (
+            "A home loan is a loan facility used for housing-related "
+            "financial needs. Eligibility depends on factors such as "
+            "income, age, employment status, credit history, existing "
+            "financial obligations, and property value."
+        )
+
+
+    # --------------------------------------------------------
+    # Car Loan
+    # --------------------------------------------------------
+
+    if (
+        "car loan" in question_lower
+        and (
+            "what is" in question_lower
+            or "overview" in question_lower
+        )
+    ):
+
+        return (
+            "A car loan is a financing facility that helps customers "
+            "purchase a new or used vehicle. The loan amount and terms "
+            "depend on the applicant's profile, vehicle value, and "
+            "bank policy."
+        )
+
+
+    # --------------------------------------------------------
+    # Debit Card
+    # --------------------------------------------------------
+
+    if (
+        "debit card" in question_lower
+        and (
+            "block" in question_lower
+            or "lost" in question_lower
+            or "stolen" in question_lower
+        )
+    ):
+
+        return (
+            "If your debit card is lost, stolen, or suspected to be "
+            "compromised, you should block the card immediately using "
+            "the bank's official digital banking channel, customer "
+            "support service, or another authorized card-blocking "
+            "facility."
+        )
+
+
+    # --------------------------------------------------------
+    # Generic RAG fallback
+    # --------------------------------------------------------
+
+    paragraphs = [
+        paragraph.strip()
+        for paragraph in text.split("\n\n")
+        if paragraph.strip()
+    ]
+
+    question_words = set(
+        question_lower.replace("?", "").split()
+    )
+
+    best_paragraph = None
+    best_score = 0
+
+    for paragraph in paragraphs:
+
+        paragraph_words = set(
+            paragraph.lower().replace(".", "").split()
+        )
+
+        score = len(
+            question_words.intersection(
+                paragraph_words
+            )
+        )
+
+        if score > best_score:
+
+            best_score = score
+            best_paragraph = paragraph
+
+    if best_paragraph:
+
+        return best_paragraph
+
+    return (
+        "I found relevant information in the banking "
+        "knowledge base, but I don't have enough information "
+        "to provide a more specific answer."
+    )
+
+
+# ============================================================
 # ASK QUESTION
 # ============================================================
 
@@ -146,15 +277,14 @@ def ask_question(question):
     print(question)
 
 
-    # ========================================================
-    # RETRIEVE RELEVANT DOCUMENTS
-    # ========================================================
+    # --------------------------------------------------------
+    # RETRIEVE DOCUMENTS
+    # --------------------------------------------------------
 
     results = vectorstore.similarity_search_with_score(
         question,
         k=3
     )
-
 
     print("\nRetrieved Documents:")
 
@@ -167,37 +297,49 @@ def ask_question(question):
         )
 
 
-    # ========================================================
-    # SELECT BEST DOCUMENT
-    # ========================================================
-
-    relevant_documents = []
-
-    if results:
-
-        best_document, best_score = results[0]
-
-        relevant_documents.append(
-            best_document
-        )
-
-
-    # ========================================================
-    # NO DOCUMENT FOUND
-    # ========================================================
-
-    if not relevant_documents:
+    if not results:
 
         return (
-            "I don't have enough information in the available "
-            "banking documents.",
+            "I don't have enough information in the "
+            "available banking documents.",
             []
         )
 
 
-    # ========================================================
-    # CREATE CONTEXT
-    # ========================================================
+    # --------------------------------------------------------
+    # BEST DOCUMENT
+    # --------------------------------------------------------
+
+    best_document = results[0][0]
+
+    relevant_documents = [
+        best_document
+    ]
+
+
+    # --------------------------------------------------------
+    # SOURCES
+    # --------------------------------------------------------
+
+    sources = []
+
+    for document in relevant_documents:
+
+        source = document.metadata.get(
+            "source"
+        )
+
+        if (
+            source
+            and source not in sources
+        ):
+
+            sources.append(source)
+
+
+    # --------------------------------------------------------
+    # CONTEXT
+    # --------------------------------------------------------
 
     context = "\n\n".join(
         document.page_content
@@ -205,9 +347,9 @@ def ask_question(question):
     )
 
 
-    # ========================================================
-    # CREATE RAG PROMPT
-    # ========================================================
+    # --------------------------------------------------------
+    # PROMPT
+    # --------------------------------------------------------
 
     prompt = f"""
 You are an AI Banking Assistant.
@@ -235,29 +377,15 @@ Answer:
 
 
     # ========================================================
-    # PREPARE SOURCES
+    # TRY GEMINI
     # ========================================================
 
-    sources = []
-
-    for document in relevant_documents:
-
-        source = document.metadata.get(
-            "source"
-        )
-
-        if source and source not in sources:
-
-            sources.append(source)
-
-
-    # ========================================================
-    # CALL GEMINI WITH RETRY
-    # ========================================================
-
-    max_retries = 3
+    max_retries = 2
 
     response = None
+
+    error_message = ""
+
 
     for attempt in range(max_retries):
 
@@ -287,11 +415,44 @@ Answer:
                 "\nGemini error:"
             )
 
-            print(error_message)
+            print(
+                error_message
+            )
 
 
             # ------------------------------------------------
-            # HANDLE TEMPORARY 503 ERROR
+            # QUOTA ERROR
+            # ------------------------------------------------
+
+            if (
+                "429" in error_message
+                or "RESOURCE_EXHAUSTED" in error_message
+                or "quota" in error_message.lower()
+            ):
+
+                print(
+                    "Gemini quota exceeded."
+                )
+
+                print(
+                    "Using RAG fallback answer."
+                )
+
+                fallback_answer = (
+                    create_fallback_answer(
+                        question,
+                        best_document
+                    )
+                )
+
+                return (
+                    fallback_answer,
+                    sources
+                )
+
+
+            # ------------------------------------------------
+            # TEMPORARY 503 ERROR
             # ------------------------------------------------
 
             if (
@@ -311,64 +472,94 @@ Answer:
 
                     time.sleep(3)
 
-                else:
+                    continue
 
-                    print(
-                        "Gemini is still unavailable "
-                        "after multiple attempts."
+                fallback_answer = (
+                    create_fallback_answer(
+                        question,
+                        best_document
                     )
-
-                    return (
-                        "The AI service is temporarily busy. "
-                        "Please try again in a few moments.",
-                        sources
-                    )
-
-            else:
+                )
 
                 return (
-                    "Sorry, I couldn't process your question "
-                    "right now. Please try again.",
+                    fallback_answer,
                     sources
                 )
 
 
+            # ------------------------------------------------
+            # OTHER GEMINI ERROR
+            # ------------------------------------------------
+
+            print(
+                "Using RAG fallback answer."
+            )
+
+            fallback_answer = (
+                create_fallback_answer(
+                    question,
+                    best_document
+                )
+            )
+
+            return (
+                fallback_answer,
+                sources
+            )
+
+
     # ========================================================
-    # HANDLE EMPTY RESPONSE
+    # IF GEMINI FAILED COMPLETELY
     # ========================================================
 
     if response is None:
 
+        fallback_answer = (
+            create_fallback_answer(
+                question,
+                best_document
+            )
+        )
+
         return (
-            "The AI service is temporarily unavailable. "
-            "Please try again later.",
+            fallback_answer,
             sources
         )
 
 
     # ========================================================
-    # EXTRACT CLEAN TEXT FROM GEMINI RESPONSE
+    # PROCESS GEMINI RESPONSE
     # ========================================================
 
     content = response.content
 
 
-    # Gemini may return a list containing dictionaries
-    if isinstance(content, list):
+    if isinstance(
+        content,
+        list
+    ):
 
         answer_parts = []
 
         for item in content:
 
-            if isinstance(item, dict):
+            if isinstance(
+                item,
+                dict
+            ):
 
                 if "text" in item:
 
                     answer_parts.append(
-                        str(item["text"])
+                        str(
+                            item["text"]
+                        )
                     )
 
-            elif isinstance(item, str):
+            elif isinstance(
+                item,
+                str
+            ):
 
                 answer_parts.append(
                     item
@@ -387,30 +578,25 @@ Answer:
         )
 
 
-    # ========================================================
-    # CLEAN ANSWER
-    # ========================================================
-
     answer = answer.strip()
 
 
     if not answer:
 
         answer = (
-            "I don't have enough information in the available "
-            "banking documents."
+            "I don't have enough information in the "
+            "available banking documents."
         )
 
 
-    # ========================================================
-    # RETURN ANSWER + SOURCES
-    # ========================================================
-
-    return answer, sources
+    return (
+        answer,
+        sources
+    )
 
 
 # ============================================================
-# TERMINAL TEST
+# LOCAL TEST
 # ============================================================
 
 if __name__ == "__main__":
@@ -419,21 +605,25 @@ if __name__ == "__main__":
         "\nEnter your banking question: "
     )
 
-
     answer, sources = ask_question(
         question
     )
 
-
     print("\n")
-    print("=" * 60)
-    print("🏦 AI BANKING ASSISTANT")
+
     print("=" * 60)
 
+    print(
+        "🏦 AI BANKING ASSISTANT"
+    )
+
+    print("=" * 60)
 
     print("\n🤖 Answer:")
-    print(answer)
 
+    print(
+        answer
+    )
 
     print("\n📚 Sources:")
 
