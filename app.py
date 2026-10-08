@@ -1,9 +1,10 @@
 import streamlit as st
+
 from rag_chain import ask_question
 
 
 # ============================================================
-# PAGE SETTINGS
+# PAGE CONFIGURATION
 # ============================================================
 
 st.set_page_config(
@@ -17,92 +18,90 @@ st.set_page_config(
 # CUSTOM CSS
 # ============================================================
 
-st.markdown("""
-<style>
+st.markdown(
+    """
+    <style>
 
-.stApp {
-    background: linear-gradient(
-        135deg,
-        #e0f2fe,
-        #ede9fe,
-        #fce7f3
-    );
-}
+    .main {
+        max-width: 900px;
+        margin: auto;
+    }
 
-/* Main title */
-.main-title {
-    text-align: center;
-    font-size: 42px;
-    font-weight: 800;
-    color: #312e81;
-    margin-bottom: 5px;
-}
+    .title {
+        text-align: center;
+        font-size: 42px;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
 
-/* Subtitle */
-.subtitle {
-    text-align: center;
-    font-size: 18px;
-    color: #475569;
-    margin-bottom: 30px;
-}
+    .subtitle {
+        text-align: center;
+        font-size: 20px;
+        margin-bottom: 5px;
+    }
 
-/* Question input */
-.stTextInput input {
-    border-radius: 12px;
-    padding: 12px;
-    font-size: 16px;
-}
+    .description {
+        text-align: center;
+        font-size: 15px;
+        margin-bottom: 30px;
+    }
 
-/* All buttons */
-div.stButton > button {
-    width: 100%;
-    border-radius: 12px;
-    min-height: 48px;
-    font-size: 15px;
-    font-weight: 600;
-    white-space: normal;
-    height: auto;
-    padding: 10px 15px;
-}
+    .service-card {
+        padding: 15px;
+        border-radius: 12px;
+        border: 1px solid #dddddd;
+        margin-bottom: 10px;
+        text-align: center;
+    }
 
-/* Answer box */
-.answer-box {
-    background-color: white;
-    padding: 25px;
-    border-radius: 18px;
-    border-left: 6px solid #7c3aed;
-    margin-top: 15px;
-    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.08);
-    line-height: 1.7;
-}
+    .service-icon {
+        font-size: 32px;
+    }
 
-/* Source box */
-.source-box {
-    background-color: white;
-    padding: 18px;
-    border-radius: 15px;
-    border-left: 6px solid #2563eb;
-    margin-top: 10px;
-    box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.06);
-}
+    .service-title {
+        font-size: 18px;
+        font-weight: 600;
+    }
 
-/* Expander */
-div[data-testid="stExpander"] {
-    background-color: rgba(255, 255, 255, 0.75);
-    border-radius: 14px;
-    margin-bottom: 12px;
-}
+    .service-description {
+        font-size: 14px;
+    }
 
-/* Metrics */
-div[data-testid="stMetric"] {
-    background-color: white;
-    padding: 15px;
-    border-radius: 15px;
-    box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.05);
-}
+    .answer-box {
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid #dddddd;
+        margin-top: 10px;
+        margin-bottom: 20px;
+    }
 
-</style>
-""", unsafe_allow_html=True)
+    .source-box {
+        padding: 10px;
+        border-radius: 10px;
+        border: 1px solid #dddddd;
+        margin-top: 10px;
+    }
+
+    .metric-box {
+        text-align: center;
+        padding: 10px;
+    }
+
+    .footer {
+        text-align: center;
+        margin-top: 30px;
+        font-size: 13px;
+    }
+
+    button {
+        white-space: normal !important;
+        height: auto !important;
+    }
+
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 
 # ============================================================
@@ -110,13 +109,17 @@ div[data-testid="stMetric"] {
 # ============================================================
 
 st.markdown(
-    '<div class="main-title">🏦 AI Banking Assistant</div>',
+    '<div class="title">🏦 AI Banking Assistant</div>',
     unsafe_allow_html=True
 )
 
 st.markdown(
-    '<div class="subtitle">'
-    'Your Smart Banking Companion<br>'
+    '<div class="subtitle">Your Smart Banking Companion</div>',
+    unsafe_allow_html=True
+)
+
+st.markdown(
+    '<div class="description">'
     'Ask questions • Get instant answers • Powered by RAG'
     '</div>',
     unsafe_allow_html=True
@@ -127,44 +130,89 @@ st.markdown(
 # BANKING SERVICES
 # ============================================================
 
-st.subheader("🏦 Banking Services")
+st.markdown("## 🏦 Banking Services")
 
-service1, service2 = st.columns(2)
 
-with service1:
+service_col1, service_col2 = st.columns(2)
 
-    st.info(
-        "🏠 **Home Loans**\n\n"
-        "Eligibility & Documents"
+
+with service_col1:
+
+    st.markdown(
+        """
+        <div class="service-card">
+            <div class="service-icon">🏠</div>
+            <div class="service-title">Home Loans</div>
+            <div class="service-description">
+                Eligibility & Documents
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
-    st.success(
-        "💰 **Personal Loans**\n\n"
-        "Eligibility & Documents"
+
+with service_col2:
+
+    st.markdown(
+        """
+        <div class="service-card">
+            <div class="service-icon">💰</div>
+            <div class="service-title">Personal Loans</div>
+            <div class="service-description">
+                Eligibility & Documents
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
-with service2:
 
-    st.warning(
-        "🚗 **Car Loans**\n\n"
-        "Eligibility & EMI"
+service_col3, service_col4 = st.columns(2)
+
+
+with service_col3:
+
+    st.markdown(
+        """
+        <div class="service-card">
+            <div class="service-icon">🚗</div>
+            <div class="service-title">Car Loans</div>
+            <div class="service-description">
+                Eligibility & EMI
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
-    st.error(
-        "💳 **Debit Cards**\n\n"
-        "Security & Blocking"
+
+with service_col4:
+
+    st.markdown(
+        """
+        <div class="service-card">
+            <div class="service-icon">💳</div>
+            <div class="service-title">Debit Cards</div>
+            <div class="service-description">
+                Security & Blocking
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
 
 # ============================================================
-# QUESTION INPUT - WAY 1
+# QUESTION SECTION
 # ============================================================
 
-st.subheader("💬 Ask Your Banking Question")
+st.markdown("## 💬 Ask Your Banking Question")
 
 st.write(
     "You can type your own question or select a popular question below."
 )
+
 
 question = st.text_input(
     "Enter your question",
@@ -173,94 +221,129 @@ question = st.text_input(
 
 
 # ============================================================
-# WAY 1 - ASK ASSISTANT BUTTON
+# CLEAN GEMINI RESPONSE
 # ============================================================
 
-if st.button(
-    "🚀 Ask Assistant",
-    use_container_width=True
-):
+def clean_answer(answer):
 
-    if question.strip():
+    if answer is None:
 
-        with st.spinner("🤖 Searching banking knowledge base..."):
-
-            answer, sources = ask_question(question)
-
-        st.subheader("🤖 Assistant Response")
-
-        st.markdown(
-            f"""
-            <div class="answer-box">
-            {answer}
-            </div>
-            """,
-            unsafe_allow_html=True
+        return (
+            "I don't have enough information in the available "
+            "banking documents."
         )
 
-        st.subheader("📚 Sources")
 
-        st.markdown(
-            '<div class="source-box">',
-            unsafe_allow_html=True
+    # Gemini sometimes returns a list
+    if isinstance(answer, list):
+
+        text_parts = []
+
+        for item in answer:
+
+            if isinstance(item, dict):
+
+                if "text" in item:
+
+                    text_parts.append(
+                        str(item["text"])
+                    )
+
+            elif isinstance(item, str):
+
+                text_parts.append(
+                    item
+                )
+
+        return "\n".join(
+            text_parts
+        ).strip()
+
+
+    # Gemini may return a dictionary
+    if isinstance(answer, dict):
+
+        if "text" in answer:
+
+            return str(
+                answer["text"]
+            ).strip()
+
+        return str(
+            answer
         )
 
-        for source in sources:
-            st.write(f"📄 {source}")
 
-        st.markdown(
-            '</div>',
-            unsafe_allow_html=True
-        )
+    # Normal string response
+    return str(
+        answer
+    ).strip()
 
-    else:
+
+# ============================================================
+# SHOW ANSWER
+# ============================================================
+
+def show_answer(user_question):
+
+    if not user_question:
 
         st.warning(
-            "⚠️ Please enter a banking question."
+            "Please enter a banking question."
         )
 
-
-# ============================================================
-# POPULAR QUESTIONS - WAY 2
-# ============================================================
-
-st.subheader("✨ Popular Questions")
-
-st.write(
-    "Click any question below and the AI will answer automatically."
-)
+        return
 
 
-# ============================================================
-# FUNCTION FOR POPULAR QUESTIONS
-# ============================================================
+    with st.spinner(
+        "🤖 Searching banking knowledge base..."
+    ):
 
-def show_answer(question):
+        try:
 
-    with st.spinner("🤖 Searching banking knowledge base..."):
+            answer, sources = ask_question(
+                user_question
+            )
 
-        answer, sources = ask_question(question)
+        except Exception as e:
 
-    st.subheader("🤖 Assistant Response")
+            st.error(
+                "Sorry, something went wrong while "
+                "processing your question."
+            )
+
+            st.caption(
+                "Please try again in a few moments."
+            )
+
+            return
+
+
+    # --------------------------------------------------------
+    # CLEAN RESPONSE
+    # --------------------------------------------------------
+
+    answer = clean_answer(
+        answer
+    )
+
+
+    # --------------------------------------------------------
+    # DISPLAY ANSWER
+    # --------------------------------------------------------
+
+    st.subheader(
+        "🤖 Assistant Response"
+    )
 
     st.markdown(
-        f"""
-        <div class="answer-box">
-        {answer}
-        </div>
-        """,
+        '<div class="answer-box">',
         unsafe_allow_html=True
     )
 
-    st.subheader("📚 Sources")
-
     st.markdown(
-        '<div class="source-box">',
-        unsafe_allow_html=True
+        answer
     )
-
-    for source in sources:
-        st.write(f"📄 {source}")
 
     st.markdown(
         '</div>',
@@ -268,169 +351,287 @@ def show_answer(question):
     )
 
 
+    # --------------------------------------------------------
+    # DISPLAY SOURCES
+    # --------------------------------------------------------
+
+    if sources:
+
+        st.subheader(
+            "📚 Sources"
+        )
+
+        for source in sources:
+
+            st.write(
+                f"📄 {source}"
+            )
+
+
+# ============================================================
+# ASK BUTTON
+# ============================================================
+
+if st.button(
+    "🚀 Ask Assistant",
+    use_container_width=True
+):
+
+    show_answer(
+        question
+    )
+
+
+# ============================================================
+# POPULAR QUESTIONS
+# ============================================================
+
+st.markdown(
+    "## ✨ Popular Questions"
+)
+
+st.write(
+    "Click any question below and the AI will answer automatically."
+)
+
+
 # ============================================================
 # HOME LOANS
 # ============================================================
 
-with st.expander("🏠 Home Loans", expanded=True):
+with st.expander(
+    "🏠 Home Loans"
+):
 
     home_questions = [
+
+        "What are the eligibility requirements for a home loan?",
+
         "What documents are required for a home loan?",
-        "Who is eligible for a home loan?",
-        "What factors affect the home loan interest rate?",
-        "What is the home loan repayment tenure?"
+
+        "How is the home loan interest rate decided?",
+
+        "What factors affect home loan eligibility?"
     ]
 
-    for i, q in enumerate(home_questions):
+
+    for q in home_questions:
 
         if st.button(
             q,
-            key=f"home_{i}",
+            key=f"home_{q}",
             use_container_width=True
         ):
 
-            show_answer(q)
+            show_answer(
+                q
+            )
 
 
 # ============================================================
 # PERSONAL LOANS
 # ============================================================
 
-with st.expander("💰 Personal Loans"):
+with st.expander(
+    "💰 Personal Loans"
+):
 
     personal_questions = [
+
+        "What is a personal loan?",
+
         "What are the eligibility requirements for a personal loan?",
+
         "What documents are required for a personal loan?",
-        "Is collateral required for a personal loan?",
-        "What happens if I miss a personal loan EMI?"
+
+        "Do personal loans require collateral?"
     ]
 
-    for i, q in enumerate(personal_questions):
+
+    for q in personal_questions:
 
         if st.button(
             q,
-            key=f"personal_{i}",
+            key=f"personal_{q}",
             use_container_width=True
         ):
 
-            show_answer(q)
+            show_answer(
+                q
+            )
 
 
 # ============================================================
 # CAR LOANS
 # ============================================================
 
-with st.expander("🚗 Car Loans"):
+with st.expander(
+    "🚗 Car Loans"
+):
 
     car_questions = [
+
+        "What is a car loan?",
+
+        "What are the eligibility requirements for a car loan?",
+
         "What documents are required for a car loan?",
-        "Who is eligible for a car loan?",
-        "What is the down payment for a car loan?",
-        "What happens if I miss a car loan EMI?"
+
+        "What is the down payment for a car loan?"
     ]
 
-    for i, q in enumerate(car_questions):
+
+    for q in car_questions:
 
         if st.button(
             q,
-            key=f"car_{i}",
+            key=f"car_{q}",
             use_container_width=True
         ):
 
-            show_answer(q)
+            show_answer(
+                q
+            )
 
 
 # ============================================================
 # DEBIT CARDS
 # ============================================================
 
-with st.expander("💳 Debit Cards"):
+with st.expander(
+    "💳 Debit Cards"
+):
 
-    card_questions = [
+    debit_questions = [
+
         "How can I block my debit card?",
-        "What should I do if my debit card is stolen?",
-        "How can I report an unauthorized transaction?",
-        "What information should I never share with anyone?"
+
+        "What should I do if my debit card is lost?",
+
+        "How can I report an unauthorized debit card transaction?",
+
+        "What debit card information should I keep confidential?"
     ]
 
-    for i, q in enumerate(card_questions):
+
+    for q in debit_questions:
 
         if st.button(
             q,
-            key=f"card_{i}",
+            key=f"debit_{q}",
             use_container_width=True
         ):
 
-            show_answer(q)
+            show_answer(
+                q
+            )
 
 
 # ============================================================
-# BANKING FAQ
+# BANKING FAQs
 # ============================================================
 
-with st.expander("❓ Banking FAQs"):
+with st.expander(
+    "❓ Banking FAQs"
+):
 
     faq_questions = [
+
         "What is EMI?",
-        "How is EMI calculated?",
+
         "What happens if I miss an EMI?",
-        "What is KYC?",
-        "Why is KYC required?",
+
         "What is a credit score?",
-        "How can I check my loan status?",
-        "What is the minimum balance requirement?"
+
+        "What is KYC?",
+
+        "Why is KYC required?",
+
+        "Can I apply for a loan online?",
+
+        "How can I check my loan status?"
     ]
 
-    for i, q in enumerate(faq_questions):
+
+    for q in faq_questions:
 
         if st.button(
             q,
-            key=f"faq_{i}",
+            key=f"faq_{q}",
             use_container_width=True
         ):
 
-            show_answer(q)
+            show_answer(
+                q
+            )
 
 
 # ============================================================
 # PROJECT INFORMATION
 # ============================================================
 
-st.divider()
+st.markdown("---")
 
-st.subheader("📊 AI Banking Assistant")
+st.markdown(
+    "## 📊 AI Banking Assistant"
+)
+
 
 metric1, metric2 = st.columns(2)
 
+
 with metric1:
 
-    st.metric(
-        "📚 Knowledge Documents",
-        "5"
+    st.markdown(
+        """
+        <div class="metric-box">
+            <h4>📚 Knowledge Documents</h4>
+            <h2>5</h2>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
+
 
 with metric2:
 
-    st.metric(
-        "🤖 AI Model",
-        "Llama 3.2"
+    st.markdown(
+        """
+        <div class="metric-box">
+            <h4>🤖 AI Model</h4>
+            <h2>Gemini</h2>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
 
 metric3, metric4 = st.columns(2)
 
+
 with metric3:
 
-    st.metric(
-        "🧠 Embeddings",
-        "Local AI"
+    st.markdown(
+        """
+        <div class="metric-box">
+            <h4>🧠 Embeddings</h4>
+            <h2>Local AI</h2>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
+
 
 with metric4:
 
-    st.metric(
-        "🔎 Retrieval",
-        "FAISS"
+    st.markdown(
+        """
+        <div class="metric-box">
+            <h4>🔎 Retrieval</h4>
+            <h2>FAISS</h2>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
 
@@ -438,12 +639,18 @@ with metric4:
 # TECHNOLOGY STACK
 # ============================================================
 
-st.subheader("🛠️ Technology Stack")
+st.markdown(
+    "### 🛠️ Technology Stack"
+)
 
 st.write(
-    "🐍 Python  •  🔗 LangChain  •  📚 RAG  •  "
-    "🔎 FAISS  •  🤗 Hugging Face Embeddings  •  "
-    "🦙 Llama 3.2  •  🎨 Streamlit"
+    "🐍 Python • "
+    "🔗 LangChain • "
+    "📚 RAG • "
+    "🔎 FAISS • "
+    "🤗 Hugging Face Embeddings • "
+    "✨ Gemini • "
+    "🎨 Streamlit"
 )
 
 
@@ -451,9 +658,12 @@ st.write(
 # FOOTER
 # ============================================================
 
-st.divider()
-
-st.caption(
-    "🔐 AI Banking Assistant | "
-    "Answers are generated from the available banking knowledge base."
+st.markdown(
+    """
+    <div class="footer">
+        🔐 AI Banking Assistant |
+        Answers are generated from the available banking knowledge base.
+    </div>
+    """,
+    unsafe_allow_html=True
 )
