@@ -1,6 +1,5 @@
-
+import os
 import streamlit as st
-
 from rag_chain import ask_question
 
 
@@ -11,8 +10,23 @@ from rag_chain import ask_question
 st.set_page_config(
     page_title="AI Banking Assistant",
     page_icon="🏦",
-    layout="centered"
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
+
+
+# ============================================================
+# SESSION STATE
+# ============================================================
+
+if "selected_question" not in st.session_state:
+    st.session_state.selected_question = None
+
+if "answer" not in st.session_state:
+    st.session_state.answer = None
+
+if "source" not in st.session_state:
+    st.session_state.source = None
 
 
 # ============================================================
@@ -23,74 +37,246 @@ st.markdown(
     """
     <style>
 
-    .main {
-        max-width: 900px;
-        margin: auto;
+    /* ---------- MAIN BACKGROUND ---------- */
+
+    .stApp {
+        background:
+            radial-gradient(circle at 10% 10%, #ffe6f2 0%, transparent 25%),
+            radial-gradient(circle at 90% 10%, #e4e9ff 0%, transparent 25%),
+            radial-gradient(circle at 50% 90%, #e3f8ff 0%, transparent 30%),
+            linear-gradient(135deg, #fff8fc, #f7f8ff, #f4fcff);
     }
 
-    .title {
-        text-align: center;
-        font-size: 42px;
-        font-weight: 700;
-        margin-bottom: 5px;
+
+    /* ---------- REMOVE DEFAULT TOP SPACE ---------- */
+
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+        max-width: 1150px;
     }
+
+
+    /* ---------- MAIN TITLE ---------- */
+
+    .main-title {
+        text-align: center;
+        font-size: 46px;
+        font-weight: 800;
+        margin-bottom: 4px;
+
+        background: linear-gradient(
+            90deg,
+            #7b2ff7,
+            #e83e8c,
+            #0099ff
+        );
+
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
 
     .subtitle {
         text-align: center;
-        font-size: 20px;
-        margin-bottom: 5px;
-    }
-
-    .description {
-        text-align: center;
-        font-size: 15px;
+        font-size: 18px;
+        color: #777;
         margin-bottom: 30px;
     }
 
-    .service-card {
-        padding: 15px;
-        border-radius: 12px;
-        border: 1px solid #dddddd;
-        margin-bottom: 10px;
+
+    /* ---------- WELCOME CARD ---------- */
+
+    .welcome-card {
+        background: rgba(255, 255, 255, 0.88);
+        border-radius: 28px;
+        padding: 25px 30px;
         text-align: center;
+
+        box-shadow:
+            0 10px 30px rgba(120, 90, 160, 0.12);
+
+        border: 1px solid rgba(255,255,255,0.8);
+
+        margin-bottom: 25px;
     }
 
-    .service-icon {
-        font-size: 32px;
+
+    .welcome-card h2 {
+        margin-bottom: 8px;
+        color: #4b3c72;
     }
 
-    .service-title {
+
+    .welcome-card p {
+        color: #777;
+        font-size: 16px;
+    }
+
+
+    /* ---------- SECTION TITLES ---------- */
+
+    .section-title {
+        font-size: 25px;
+        font-weight: 750;
+        color: #40365d;
+        margin-top: 25px;
+        margin-bottom: 15px;
+    }
+
+
+    /* ---------- QUESTION INPUT ---------- */
+
+    .question-label {
         font-size: 18px;
-        font-weight: 600;
+        font-weight: 700;
+        color: #55446f;
+        margin-bottom: 8px;
     }
 
-    .service-description {
-        font-size: 14px;
+
+    /* ---------- CATEGORY CARDS ---------- */
+
+    .category-card {
+        padding: 16px 18px;
+        border-radius: 22px;
+        margin-bottom: 15px;
+        background: rgba(255,255,255,0.78);
+
+        box-shadow:
+            0 7px 20px rgba(100, 90, 150, 0.09);
+
+        border: 1px solid rgba(255,255,255,0.9);
     }
 
-    .answer-box {
-        padding: 20px;
-        border-radius: 12px;
-        border: 1px solid #dddddd;
-        margin-top: 10px;
+
+    .category-title {
+        font-size: 20px;
+        font-weight: 750;
+        margin-bottom: 10px;
+    }
+
+
+    /* ---------- ANSWER CARD ---------- */
+
+    .answer-card {
+        background: rgba(255,255,255,0.94);
+        border-radius: 28px;
+
+        padding: 28px;
+
+        box-shadow:
+            0 12px 35px rgba(100, 80, 150, 0.15);
+
+        border: 1px solid #eee8ff;
+
+        margin-top: 20px;
         margin-bottom: 20px;
     }
 
-    .metric-box {
-        text-align: center;
-        padding: 10px;
+
+    .answer-heading {
+        font-size: 22px;
+        font-weight: 750;
+        color: #5d3b87;
+        margin-bottom: 12px;
     }
+
+
+    .question-display {
+        background: linear-gradient(
+            90deg,
+            #f6efff,
+            #fff0f7
+        );
+
+        border-radius: 18px;
+
+        padding: 15px 18px;
+
+        color: #513d67;
+
+        font-weight: 650;
+
+        margin-bottom: 18px;
+    }
+
+
+    /* ---------- SOURCE CARD ---------- */
+
+    .source-card {
+        background: linear-gradient(
+            135deg,
+            #eef8ff,
+            #f7f0ff
+        );
+
+        border-radius: 20px;
+
+        padding: 18px;
+
+        border: 1px solid #e4dcff;
+
+        margin-top: 20px;
+    }
+
+
+    /* ---------- FOOTER ---------- */
 
     .footer {
         text-align: center;
-        margin-top: 30px;
-        font-size: 13px;
+        color: #888;
+        font-size: 14px;
+        padding-top: 35px;
+        padding-bottom: 10px;
     }
 
-    button {
-        white-space: normal !important;
-        height: auto !important;
+
+    /* ---------- BUTTONS ---------- */
+
+    div.stButton > button {
+        border-radius: 16px;
+
+        border: 1px solid #e7defb;
+
+        background: rgba(255,255,255,0.9);
+
+        color: #51436b;
+
+        font-weight: 650;
+
+        min-height: 52px;
+
+        transition: all 0.2s ease;
     }
+
+
+    div.stButton > button:hover {
+        border-color: #a579ff;
+
+        color: #7138c8;
+
+        box-shadow:
+            0 6px 18px rgba(120, 80, 200, 0.16);
+
+        transform: translateY(-1px);
+    }
+
+
+    /* ---------- PRIMARY BUTTON ---------- */
+
+    div.stButton > button[kind="primary"] {
+        background: linear-gradient(
+            90deg,
+            #8b5cf6,
+            #e85aa8
+        );
+
+        color: white;
+
+        border: none;
+    }
+
 
     </style>
     """,
@@ -103,270 +289,244 @@ st.markdown(
 # ============================================================
 
 st.markdown(
-    '<div class="title">🏦 AI Banking Assistant</div>',
+    '<div class="main-title">🏦 AI Banking Assistant</div>',
     unsafe_allow_html=True
 )
 
 st.markdown(
-    '<div class="subtitle">Your Smart Banking Companion</div>',
+    '<div class="subtitle">Your friendly banking companion ✨</div>',
     unsafe_allow_html=True
 )
+
+
+# ============================================================
+# IF ANSWER IS AVAILABLE
+# ============================================================
+
+if st.session_state.answer:
+
+    # --------------------------------------------------------
+    # BACK BUTTON
+    # --------------------------------------------------------
+
+    if st.button("← Ask Another Question"):
+
+        st.session_state.selected_question = None
+        st.session_state.answer = None
+        st.session_state.source = None
+
+        st.rerun()
+
+
+    # --------------------------------------------------------
+    # QUESTION
+    # --------------------------------------------------------
+
+    st.markdown(
+        '<div class="section-title">✨ Your Question</div>',
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        f"""
+        <div class="question-display">
+        💬 {st.session_state.selected_question}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+    # --------------------------------------------------------
+    # ANSWER
+    # --------------------------------------------------------
+
+    st.markdown(
+        """
+        <div class="answer-card">
+
+        <div class="answer-heading">
+        🤖 AI Banking Assistant
+        </div>
+
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.write(st.session_state.answer)
+
+    st.markdown(
+        "</div>",
+        unsafe_allow_html=True
+    )
+
+
+    # --------------------------------------------------------
+    # SOURCE
+    # --------------------------------------------------------
+
+    if st.session_state.source:
+
+        source_name = os.path.basename(
+            st.session_state.source
+        )
+
+        st.markdown(
+            """
+            <div class="source-card">
+
+            📚 <b>Relevant Source</b>
+
+            <br><br>
+
+            📄
+            """,
+            unsafe_allow_html=True
+        )
+
+        st.write(source_name)
+
+        st.markdown(
+            "</div>",
+            unsafe_allow_html=True
+        )
+
+
+        # ----------------------------------------------------
+        # VIEW SOURCE INFORMATION
+        # ----------------------------------------------------
+
+        with st.expander(
+            f"📖 View Information — {source_name}"
+        ):
+
+            file_path = os.path.join(
+                "data",
+                source_name
+            )
+
+            if os.path.exists(file_path):
+
+                with open(
+                    file_path,
+                    "r",
+                    encoding="utf-8"
+                ) as file:
+
+                    source_content = file.read()
+
+                st.markdown(source_content)
+
+            else:
+
+                st.warning(
+                    "Source document could not be found."
+                )
+
+
+    # --------------------------------------------------------
+    # STOP HOME PAGE FROM SHOWING
+    # --------------------------------------------------------
+
+    st.markdown(
+        """
+        <div class="footer">
+        💜 Hope this helped! Ask me another banking question anytime.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.stop()
+
+
+# ============================================================
+# WELCOME
+# ============================================================
 
 st.markdown(
-    '<div class="description">'
-    'Ask questions • Get instant answers • Powered by RAG'
-    '</div>',
+    """
+    <div class="welcome-card">
+
+    <h2>🌸 Hello! How can I help you?</h2>
+
+    <p>
+    Ask me anything about loans, debit cards, EMI,
+    KYC and other banking services.
+    </p>
+
+    </div>
+    """,
     unsafe_allow_html=True
 )
 
 
 # ============================================================
-# BANKING SERVICES
+# ASK QUESTION
 # ============================================================
 
-st.markdown("## 🏦 Banking Services")
-
-
-service_col1, service_col2 = st.columns(2)
-
-
-with service_col1:
-
-    st.markdown(
-        """
-        <div class="service-card">
-            <div class="service-icon">🏠</div>
-            <div class="service-title">Home Loans</div>
-            <div class="service-description">
-                Eligibility & Documents
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-
-with service_col2:
-
-    st.markdown(
-        """
-        <div class="service-card">
-            <div class="service-icon">💰</div>
-            <div class="service-title">Personal Loans</div>
-            <div class="service-description">
-                Eligibility & Documents
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-
-service_col3, service_col4 = st.columns(2)
-
-
-with service_col3:
-
-    st.markdown(
-        """
-        <div class="service-card">
-            <div class="service-icon">🚗</div>
-            <div class="service-title">Car Loans</div>
-            <div class="service-description">
-                Eligibility & EMI
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-
-with service_col4:
-
-    st.markdown(
-        """
-        <div class="service-card">
-            <div class="service-icon">💳</div>
-            <div class="service-title">Debit Cards</div>
-            <div class="service-description">
-                Security & Blocking
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-
-# ============================================================
-# QUESTION INPUT
-# ============================================================
-
-st.markdown("## 💬 Ask Your Banking Question")
-
-st.write(
-    "You can type your own question or select a popular question below."
+st.markdown(
+    '<div class="section-title">💬 Ask Your Question</div>',
+    unsafe_allow_html=True
 )
-
 
 question = st.text_input(
-    "Enter your question",
-    placeholder="Example: What documents are required for a home loan?"
+    "Banking question",
+    placeholder=(
+        "Example: What documents are required for a home loan?"
+    ),
+    label_visibility="collapsed"
 )
 
 
-# ============================================================
-# CLEAN ANSWER
-# ============================================================
-
-def clean_answer(answer):
-
-    if answer is None:
-
-        return (
-            "I don't have enough information in the available "
-            "banking documents."
-        )
-
-
-    if isinstance(answer, list):
-
-        text_parts = []
-
-        for item in answer:
-
-            if isinstance(item, dict):
-
-                if "text" in item:
-
-                    text_parts.append(
-                        str(item["text"])
-                    )
-
-            elif isinstance(item, str):
-
-                text_parts.append(item)
-
-
-        return "\n".join(
-            text_parts
-        ).strip()
-
-
-    if isinstance(answer, dict):
-
-        if "text" in answer:
-
-            return str(
-                answer["text"]
-            ).strip()
-
-        return str(answer)
-
-
-    return str(answer).strip()
-
-
-# ============================================================
-# SHOW ANSWER
-# ============================================================
-
-def show_answer(user_question):
-
-    if not user_question:
-
-        st.warning(
-            "Please enter a banking question."
-        )
-
-        return
-
-
-    with st.spinner(
-        "🤖 Searching banking knowledge base..."
-    ):
-
-        try:
-
-            answer, sources = ask_question(
-                user_question
-            )
-
-
-        except Exception as e:
-
-            st.error(
-                "Sorry, something went wrong while "
-                "processing your question."
-            )
-
-            # Show the real error for debugging
-            st.error(
-                f"Error details: {e}"
-            )
-
-            return
-
-
-    answer = clean_answer(
-        answer
-    )
-
-
-    # ========================================================
-    # ANSWER DISPLAY
-    # ========================================================
-
-    st.subheader(
-        "🤖 Assistant Response"
-    )
-
-
-    st.markdown(
-        '<div class="answer-box">',
-        unsafe_allow_html=True
-    )
-
-
-    st.markdown(
-        answer
-    )
-
-
-    st.markdown(
-        '</div>',
-        unsafe_allow_html=True
-    )
-
-
-    # ========================================================
-    # SOURCES
-    # ========================================================
-
-    if sources:
-
-        st.subheader(
-            "📚 Sources"
-        )
-
-        for source in sources:
-
-            st.write(
-                f"📄 {source}"
-            )
-
-
-# ============================================================
-# ASK BUTTON
-# ============================================================
-
 if st.button(
-    "🚀 Ask Assistant",
+    "✨ Ask AI Assistant",
+    type="primary",
     use_container_width=True
 ):
 
-    show_answer(
-        question
-    )
+    if question.strip():
+
+        with st.spinner(
+            "🤖 Finding the best answer for you..."
+        ):
+
+            try:
+
+                answer, sources = ask_question(
+                    question.strip()
+                )
+
+                st.session_state.selected_question = (
+                    question.strip()
+                )
+
+                st.session_state.answer = answer
+
+                # Only keep the most relevant source
+                if sources:
+
+                    st.session_state.source = (
+                        str(sources[0])
+                    )
+
+                else:
+
+                    st.session_state.source = None
+
+                st.rerun()
+
+            except Exception as e:
+
+                st.error(
+                    "Sorry, I couldn't process your question."
+                )
+
+    else:
+
+        st.warning(
+            "🌷 Please enter a banking question first."
+        )
 
 
 # ============================================================
@@ -374,11 +534,8 @@ if st.button(
 # ============================================================
 
 st.markdown(
-    "## ✨ Popular Questions"
-)
-
-st.write(
-    "Click any question below and the AI will answer automatically."
+    '<div class="section-title">⭐ Popular Questions</div>',
+    unsafe_allow_html=True
 )
 
 
@@ -386,255 +543,459 @@ st.write(
 # HOME LOANS
 # ============================================================
 
-with st.expander(
-    "🏠 Home Loans"
-):
+st.markdown(
+    """
+    <div class="category-card">
 
-    home_questions = [
+    <div class="category-title">
+    🏠 Home Loans
+    </div>
 
-        "What are the eligibility requirements for a home loan?",
-
-        "What documents are required for a home loan?",
-
-        "How is the home loan interest rate decided?",
-
-        "What factors affect home loan eligibility?"
-
-    ]
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 
-    for q in home_questions:
+home_questions = [
 
-        if st.button(
-            q,
-            key=f"home_{q}",
-            use_container_width=True
-        ):
+    "What is home loan eligibility?",
 
-            show_answer(q)
+    "What documents are required for a home loan?",
+
+    "What is the minimum age for a home loan?",
+
+    "How is home loan interest rate decided?",
+
+    "What factors affect home loan eligibility?",
+
+    "What factors affect the home loan amount?",
+
+    "What is home loan tenure?",
+
+    "Can employment status affect home loan eligibility?",
+
+    "How does credit history affect a home loan?",
+
+    "Why does the bank verify property documents?",
+
+    "What income documents may be required for a home loan?",
+
+    "What KYC documents are required for a home loan?",
+
+    "What happens during home loan processing?",
+
+    "What factors determine repayment capacity?",
+
+    "Does property value affect the home loan?",
+
+    "What should I check before applying for a home loan?",
+
+]
+
+
+for i in range(0, len(home_questions), 2):
+
+    cols = st.columns(2)
+
+    for j, col in enumerate(cols):
+
+        index = i + j
+
+        if index < len(home_questions):
+
+            q = home_questions[index]
+
+            with col:
+
+                if st.button(
+                    f"🏠 {q}",
+                    key=f"home_{index}",
+                    use_container_width=True
+                ):
+
+                    with st.spinner(
+                        "🤖 Finding the answer..."
+                    ):
+
+                        try:
+
+                            answer, sources = ask_question(q)
+
+                            st.session_state.selected_question = q
+
+                            st.session_state.answer = answer
+
+                            if sources:
+                                st.session_state.source = str(
+                                    sources[0]
+                                )
+                            else:
+                                st.session_state.source = None
+
+                            st.rerun()
+
+                        except Exception:
+
+                            st.error(
+                                "Unable to process this question."
+                            )
 
 
 # ============================================================
 # PERSONAL LOANS
 # ============================================================
 
-with st.expander(
-    "💰 Personal Loans"
-):
+st.markdown(
+    """
+    <div class="category-card">
 
-    personal_questions = [
+    <div class="category-title">
+    💰 Personal Loans
+    </div>
 
-        "What is a personal loan?",
-
-        "What are the eligibility requirements for a personal loan?",
-
-        "What documents are required for a personal loan?",
-
-        "Do personal loans require collateral?"
-
-    ]
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 
-    for q in personal_questions:
+personal_questions = [
 
-        if st.button(
-            q,
-            key=f"personal_{q}",
-            use_container_width=True
-        ):
+    "What is a personal loan?",
 
-            show_answer(q)
+    "What is personal loan eligibility?",
+
+    "What documents are required for a personal loan?",
+
+    "Is a personal loan secured or unsecured?",
+
+    "What affects the personal loan interest rate?",
+
+    "What affects personal loan tenure?",
+
+    "What happens if I miss a personal loan EMI?",
+
+    "Can a personal loan be used for education?",
+
+    "Can a personal loan be used for medical expenses?",
+
+]
+
+
+for i in range(0, len(personal_questions), 2):
+
+    cols = st.columns(2)
+
+    for j, col in enumerate(cols):
+
+        index = i + j
+
+        if index < len(personal_questions):
+
+            q = personal_questions[index]
+
+            with col:
+
+                if st.button(
+                    f"💰 {q}",
+                    key=f"personal_{index}",
+                    use_container_width=True
+                ):
+
+                    with st.spinner(
+                        "🤖 Finding the answer..."
+                    ):
+
+                        try:
+
+                            answer, sources = ask_question(q)
+
+                            st.session_state.selected_question = q
+
+                            st.session_state.answer = answer
+
+                            if sources:
+                                st.session_state.source = str(
+                                    sources[0]
+                                )
+                            else:
+                                st.session_state.source = None
+
+                            st.rerun()
+
+                        except Exception:
+
+                            st.error(
+                                "Unable to process this question."
+                            )
 
 
 # ============================================================
 # CAR LOANS
 # ============================================================
 
-with st.expander(
-    "🚗 Car Loans"
-):
+st.markdown(
+    """
+    <div class="category-card">
 
-    car_questions = [
+    <div class="category-title">
+    🚗 Car Loans
+    </div>
 
-        "What is a car loan?",
-
-        "What are the eligibility requirements for a car loan?",
-
-        "What documents are required for a car loan?",
-
-        "What is the down payment for a car loan?"
-
-    ]
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 
-    for q in car_questions:
+car_questions = [
 
-        if st.button(
-            q,
-            key=f"car_{q}",
-            use_container_width=True
-        ):
+    "What is a car loan?",
 
-            show_answer(q)
+    "What is car loan eligibility?",
+
+    "What documents are required for a car loan?",
+
+    "Is a down payment required for a car loan?",
+
+    "What affects the car loan interest rate?",
+
+    "What affects car loan tenure?",
+
+    "Can I finance a used car?",
+
+    "What is a vehicle quotation?",
+
+    "What happens if I miss a car loan EMI?",
+
+]
+
+
+for i in range(0, len(car_questions), 2):
+
+    cols = st.columns(2)
+
+    for j, col in enumerate(cols):
+
+        index = i + j
+
+        if index < len(car_questions):
+
+            q = car_questions[index]
+
+            with col:
+
+                if st.button(
+                    f"🚗 {q}",
+                    key=f"car_{index}",
+                    use_container_width=True
+                ):
+
+                    with st.spinner(
+                        "🤖 Finding the answer..."
+                    ):
+
+                        try:
+
+                            answer, sources = ask_question(q)
+
+                            st.session_state.selected_question = q
+
+                            st.session_state.answer = answer
+
+                            if sources:
+                                st.session_state.source = str(
+                                    sources[0]
+                                )
+                            else:
+                                st.session_state.source = None
+
+                            st.rerun()
+
+                        except Exception:
+
+                            st.error(
+                                "Unable to process this question."
+                            )
 
 
 # ============================================================
 # DEBIT CARDS
 # ============================================================
 
-with st.expander(
-    "💳 Debit Cards"
-):
+st.markdown(
+    """
+    <div class="category-card">
 
-    debit_questions = [
+    <div class="category-title">
+    💳 Debit Cards
+    </div>
 
-        "How can I block my debit card?",
-
-        "What should I do if my debit card is lost?",
-
-        "How can I report an unauthorized debit card transaction?",
-
-        "What debit card information should I keep confidential?"
-
-    ]
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 
-    for q in debit_questions:
+debit_questions = [
 
-        if st.button(
-            q,
-            key=f"debit_{q}",
-            use_container_width=True
-        ):
+    "How can I block my debit card?",
 
-            show_answer(q)
+    "What should I do if my debit card is stolen?",
+
+    "What should I do about an unauthorized transaction?",
+
+    "What information may be required to block a debit card?",
+
+    "What should I do after blocking my debit card?",
+
+    "Should I share my debit card PIN?",
+
+    "Should I share my OTP?",
+
+    "How can I protect my debit card?",
+
+]
+
+
+for i in range(0, len(debit_questions), 2):
+
+    cols = st.columns(2)
+
+    for j, col in enumerate(cols):
+
+        index = i + j
+
+        if index < len(debit_questions):
+
+            q = debit_questions[index]
+
+            with col:
+
+                if st.button(
+                    f"💳 {q}",
+                    key=f"debit_{index}",
+                    use_container_width=True
+                ):
+
+                    with st.spinner(
+                        "🤖 Finding the answer..."
+                    ):
+
+                        try:
+
+                            answer, sources = ask_question(q)
+
+                            st.session_state.selected_question = q
+
+                            st.session_state.answer = answer
+
+                            if sources:
+                                st.session_state.source = str(
+                                    sources[0]
+                                )
+                            else:
+                                st.session_state.source = None
+
+                            st.rerun()
+
+                        except Exception:
+
+                            st.error(
+                                "Unable to process this question."
+                            )
 
 
 # ============================================================
 # BANKING FAQ
 # ============================================================
 
-with st.expander(
-    "❓ Banking FAQs"
-):
-
-    faq_questions = [
-
-        "What is EMI?",
-
-        "What happens if I miss an EMI?",
-
-        "What is a credit score?",
-
-        "What is KYC?",
-
-        "Why is KYC required?",
-
-        "Can I apply for a loan online?",
-
-        "How can I check my loan status?"
-
-    ]
-
-
-    for q in faq_questions:
-
-        if st.button(
-            q,
-            key=f"faq_{q}",
-            use_container_width=True
-        ):
-
-            show_answer(q)
-
-
-# ============================================================
-# PROJECT METRICS
-# ============================================================
-
-st.markdown("---")
-
 st.markdown(
-    "## 📊 AI Banking Assistant"
+    """
+    <div class="category-card">
+
+    <div class="category-title">
+    ❓ Banking FAQs
+    </div>
+
+    </div>
+    """,
+    unsafe_allow_html=True
 )
 
 
-metric1, metric2 = st.columns(2)
+faq_questions = [
+
+    "What is EMI?",
+
+    "How is EMI calculated?",
+
+    "What is KYC?",
+
+    "Why is KYC required?",
+
+    "What is a credit score?",
+
+    "What happens if I miss an EMI?",
+
+    "What is minimum balance?",
+
+    "How can I check my loan status?",
+
+    "Can I apply for a loan online?",
+
+    "How can I contact customer support?",
+
+]
 
 
-with metric1:
+for i in range(0, len(faq_questions), 2):
 
-    st.markdown(
-        """
-        <div class="metric-box">
-            <h4>📚 Knowledge Documents</h4>
-            <h2>5</h2>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    cols = st.columns(2)
 
+    for j, col in enumerate(cols):
 
-with metric2:
+        index = i + j
 
-    st.markdown(
-        """
-        <div class="metric-box">
-            <h4>🤖 AI Model</h4>
-            <h2>Gemini</h2>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+        if index < len(faq_questions):
 
+            q = faq_questions[index]
 
-metric3, metric4 = st.columns(2)
+            with col:
 
+                if st.button(
+                    f"❓ {q}",
+                    key=f"faq_{index}",
+                    use_container_width=True
+                ):
 
-with metric3:
+                    with st.spinner(
+                        "🤖 Finding the answer..."
+                    ):
 
-    st.markdown(
-        """
-        <div class="metric-box">
-            <h4>🧠 Embeddings</h4>
-            <h2>Local AI</h2>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+                        try:
 
+                            answer, sources = ask_question(q)
 
-with metric4:
+                            st.session_state.selected_question = q
 
-    st.markdown(
-        """
-        <div class="metric-box">
-            <h4>🔎 Retrieval</h4>
-            <h2>FAISS</h2>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+                            st.session_state.answer = answer
 
+                            if sources:
+                                st.session_state.source = str(
+                                    sources[0]
+                                )
+                            else:
+                                st.session_state.source = None
 
-# ============================================================
-# TECHNOLOGY STACK
-# ============================================================
+                            st.rerun()
 
-st.markdown(
-    "### 🛠️ Technology Stack"
-)
+                        except Exception:
 
-
-st.write(
-    "🐍 Python • "
-    "🔗 LangChain • "
-    "📚 RAG • "
-    "🔎 FAISS • "
-    "🤗 Hugging Face Embeddings • "
-    "✨ Gemini • "
-    "🎨 Streamlit"
-)
+                            st.error(
+                                "Unable to process this question."
+                            )
 
 
 # ============================================================
@@ -644,8 +1005,12 @@ st.write(
 st.markdown(
     """
     <div class="footer">
-        🔐 AI Banking Assistant |
-        Answers are generated from the available banking knowledge base.
+
+    🏦 AI Banking Assistant &nbsp; • &nbsp;
+    🤖 Smart &nbsp; • &nbsp;
+    💜 Friendly &nbsp; • &nbsp;
+    ✨ Helpful
+
     </div>
     """,
     unsafe_allow_html=True
