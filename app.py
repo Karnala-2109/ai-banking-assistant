@@ -1,3 +1,4 @@
+
 import streamlit as st
 
 from rag_chain import ask_question
@@ -73,13 +74,6 @@ st.markdown(
         border: 1px solid #dddddd;
         margin-top: 10px;
         margin-bottom: 20px;
-    }
-
-    .source-box {
-        padding: 10px;
-        border-radius: 10px;
-        border: 1px solid #dddddd;
-        margin-top: 10px;
     }
 
     .metric-box {
@@ -204,7 +198,7 @@ with service_col4:
 
 
 # ============================================================
-# QUESTION SECTION
+# QUESTION INPUT
 # ============================================================
 
 st.markdown("## 💬 Ask Your Banking Question")
@@ -221,7 +215,7 @@ question = st.text_input(
 
 
 # ============================================================
-# CLEAN GEMINI RESPONSE
+# CLEAN ANSWER
 # ============================================================
 
 def clean_answer(answer):
@@ -234,7 +228,6 @@ def clean_answer(answer):
         )
 
 
-    # Gemini sometimes returns a list
     if isinstance(answer, list):
 
         text_parts = []
@@ -251,16 +244,14 @@ def clean_answer(answer):
 
             elif isinstance(item, str):
 
-                text_parts.append(
-                    item
-                )
+                text_parts.append(item)
+
 
         return "\n".join(
             text_parts
         ).strip()
 
 
-    # Gemini may return a dictionary
     if isinstance(answer, dict):
 
         if "text" in answer:
@@ -269,15 +260,10 @@ def clean_answer(answer):
                 answer["text"]
             ).strip()
 
-        return str(
-            answer
-        )
+        return str(answer)
 
 
-    # Normal string response
-    return str(
-        answer
-    ).strip()
+    return str(answer).strip()
 
 
 # ============================================================
@@ -305,6 +291,7 @@ def show_answer(user_question):
                 user_question
             )
 
+
         except Exception as e:
 
             st.error(
@@ -312,38 +299,38 @@ def show_answer(user_question):
                 "processing your question."
             )
 
-            st.caption(
-                "Please try again in a few moments."
+            # Show the real error for debugging
+            st.error(
+                f"Error details: {e}"
             )
 
             return
 
-
-    # --------------------------------------------------------
-    # CLEAN RESPONSE
-    # --------------------------------------------------------
 
     answer = clean_answer(
         answer
     )
 
 
-    # --------------------------------------------------------
-    # DISPLAY ANSWER
-    # --------------------------------------------------------
+    # ========================================================
+    # ANSWER DISPLAY
+    # ========================================================
 
     st.subheader(
         "🤖 Assistant Response"
     )
+
 
     st.markdown(
         '<div class="answer-box">',
         unsafe_allow_html=True
     )
 
+
     st.markdown(
         answer
     )
+
 
     st.markdown(
         '</div>',
@@ -351,9 +338,9 @@ def show_answer(user_question):
     )
 
 
-    # --------------------------------------------------------
-    # DISPLAY SOURCES
-    # --------------------------------------------------------
+    # ========================================================
+    # SOURCES
+    # ========================================================
 
     if sources:
 
@@ -412,6 +399,7 @@ with st.expander(
         "How is the home loan interest rate decided?",
 
         "What factors affect home loan eligibility?"
+
     ]
 
 
@@ -423,9 +411,7 @@ with st.expander(
             use_container_width=True
         ):
 
-            show_answer(
-                q
-            )
+            show_answer(q)
 
 
 # ============================================================
@@ -445,6 +431,7 @@ with st.expander(
         "What documents are required for a personal loan?",
 
         "Do personal loans require collateral?"
+
     ]
 
 
@@ -456,9 +443,7 @@ with st.expander(
             use_container_width=True
         ):
 
-            show_answer(
-                q
-            )
+            show_answer(q)
 
 
 # ============================================================
@@ -478,6 +463,7 @@ with st.expander(
         "What documents are required for a car loan?",
 
         "What is the down payment for a car loan?"
+
     ]
 
 
@@ -489,9 +475,7 @@ with st.expander(
             use_container_width=True
         ):
 
-            show_answer(
-                q
-            )
+            show_answer(q)
 
 
 # ============================================================
@@ -511,6 +495,7 @@ with st.expander(
         "How can I report an unauthorized debit card transaction?",
 
         "What debit card information should I keep confidential?"
+
     ]
 
 
@@ -522,13 +507,11 @@ with st.expander(
             use_container_width=True
         ):
 
-            show_answer(
-                q
-            )
+            show_answer(q)
 
 
 # ============================================================
-# BANKING FAQs
+# BANKING FAQ
 # ============================================================
 
 with st.expander(
@@ -550,6 +533,7 @@ with st.expander(
         "Can I apply for a loan online?",
 
         "How can I check my loan status?"
+
     ]
 
 
@@ -561,13 +545,11 @@ with st.expander(
             use_container_width=True
         ):
 
-            show_answer(
-                q
-            )
+            show_answer(q)
 
 
 # ============================================================
-# PROJECT INFORMATION
+# PROJECT METRICS
 # ============================================================
 
 st.markdown("---")
@@ -642,6 +624,7 @@ with metric4:
 st.markdown(
     "### 🛠️ Technology Stack"
 )
+
 
 st.write(
     "🐍 Python • "
